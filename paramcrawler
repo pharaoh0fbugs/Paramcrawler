@@ -1,0 +1,21 @@
+#!/bin/bash
+
+# Ask user for the target URL
+read -p "Enter our baby url  (e.g. https://www.example.com): " TARGET
+
+# Extract the domain root (used for filtering)
+DOMAIN=$(echo "$TARGET" | awk -F[/:] '{print $4}')
+
+# Create output directory based on domain
+OUTDIR="gospider_out_${DOMAIN}"
+mkdir -p "$OUTDIR"
+
+echo "[*] Crawling $TARGET with GoSpider..."
+
+# Run GoSpider and collect only URLs with parameters
+gospider -s "$TARGET" -t 10 --js --subs --sitemap --robots -o "$OUTDIR" \
+  | grep -Eo 'https?://[^ ]+\?[^ ]+' \
+  | grep "$DOMAIN" \
+  | sort -u > "$OUTDIR/params.txt"
+
+echo "[+] Done. Extracted parameterized URLs saved to: $OUTDIR/params.txt"
